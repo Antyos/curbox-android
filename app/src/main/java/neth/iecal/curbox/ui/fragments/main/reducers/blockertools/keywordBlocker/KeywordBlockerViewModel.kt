@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import neth.iecal.curbox.data.db.AppDatabase
@@ -44,10 +45,10 @@ class KeywordBlockerViewModel(application: Application) : AndroidViewModel(appli
         val window = config.schedule.activeWindow() ?: return null
 
         val limitMillis = limitForToday(config.usage) * 60_000L
-        val patterns = KeywordMatcher.compileKeywords(group.selectedKeywords)
-        val used = withContext(Dispatchers.IO) {
+        if (limitMillis <= 0L) return 0L
+        val used = withContext(Dispatchers.Default) {
+            val patterns = KeywordMatcher.compileKeywords(group.selectedKeywords)
             val usageEndMs = minOf(System.currentTimeMillis(), window.endMs)
-            val dao = AppDatabase.getInstance(getApplication()).websiteStatsDao()
             val startDate = java.time.Instant.ofEpochMilli(window.startMs)
                 .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
             val endDate = java.time.Instant.ofEpochMilli(usageEndMs)
@@ -59,8 +60,9 @@ class KeywordBlockerViewModel(application: Application) : AndroidViewModel(appli
                     date = date.plusDays(1)
                 }
             }
-            val rows = dao.getStatsForDates(dates)
-                .filter { KeywordMatcher.matchesPatterns(patterns, it.urlIdentifier) }
+            val rows = withContext(Dispatchers.IO) {
+                AppDatabase.getInstance(getApplication()).websiteStatsDao().getStatsForDates(dates)
+            }.filter { KeywordMatcher.matchesPatterns(patterns, it.urlIdentifier) }
             WebsiteUsageWindow.sum(rows, window.startMs, usageEndMs)
         }
         return (limitMillis - used).coerceAtLeast(0L)
@@ -92,8 +94,12 @@ class KeywordBlockerViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    fun setIsActive(isActive: Boolean) {
-        updateConfig { it.copy(isActive = isActive) }
+    fun activateIfNeeded() {
+        viewModelScope.launch {
+            if (dataStoreManager.settings.first().keywordBlockerConfig.isActive) return@launch
+            dataStoreManager.updateKeywordBlockerConfig { it.copy(isActive = true) }
+            requestKeywordBlockerRefresh()
+        }
     }
 
     fun setBlockAllExceptSupported(enabled: Boolean) {

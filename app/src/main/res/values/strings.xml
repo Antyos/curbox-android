@@ -1555,6 +1555,7 @@
     <string name="info_official_documentation">Official Documentation</string>
     <string name="crash_logs_title">Crash Logs</string>
     <string name="crash_logs_none_available">No crash logs available.</string>
+    <string name="crash_logs_read_error">Could not read crash logs.</string>
 
     <!-- Onboarding permissions -->
     <string name="onboarding_app_limit_group_name">%1$s Limits</string>

@@ -79,11 +79,15 @@ class CreateKeywordGroupFragment : Fragment() {
             viewModel.keywordBlockerConfig.collectLatest { config ->
                 val group = config.keywordGroups.find { it.id == groupId }
                 if (group != null && !isEditing) {
+                    val (keywords, keywordItems) = withContext(Dispatchers.Default) {
+                        val uniqueKeywords = group.selectedKeywords.toCollection(LinkedHashSet())
+                        uniqueKeywords to uniqueKeywords.toList()
+                    }
                     isEditing = true
                     binding.tvTitle.text = getString(R.string.keyword_group_edit_title)
                     binding.etGroupName.setText(group.name)
-                    selectedKeywords = group.selectedKeywords.toCollection(LinkedHashSet())
-                    updateKeywordsList()
+                    selectedKeywords = keywords
+                    keywordAdapter.submitList(keywordItems)
 
                     group.config?.let { scheduledConfig ->
                         viewModel.currentTimeConfig = scheduledConfig.schedule
