@@ -1630,7 +1630,11 @@
     <string name="warning_math_answer_hint">Answer</string>
     <string name="warning_math_check_answer">Check answer</string>
     <string name="warning_math_answer_required">Enter a number</string>
-    <string name="warning_math_incorrect">Incorrect answer. Try the next question.</string>
+    <string name="warning_math_incorrect">Incorrect answer. Wait before trying again.</string>
+    <plurals name="warning_math_retry_in">
+        <item quantity="one">Try again in %1$d second</item>
+        <item quantity="other">Try again in %1$d seconds</item>
+    </plurals>
     <string name="warning_option_never_unlock">Never Unlock</string>
     <string name="warning_option_never_unlock_desc">Total lockdown. No bypassing allowed.</string>
     <string name="warning_option_require_effort">Require effort to unlock</string>
