@@ -21,11 +21,8 @@ jobs:
       - name: Give permission to executable
         run: chmod +x gradlew
 
-      - name: Clear build cache
-        uses: gradle/gradle-build-action@v3.1.0
-        with:
-          gradle-version: nightly
-          arguments: clean
+      - name: Clean project
+        run: ./gradlew clean
 
       - name: Build Fdroid Debug APK
         run: ./gradlew assembleFdroidDebug
